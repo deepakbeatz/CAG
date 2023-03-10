@@ -25,12 +25,11 @@ AssetClassifierModel.initModel(
 // End Points
 app.get("/api/test", async (req, res) => {
   const tokens = nlpUtils.tokenize("hello, welcome to CAG app!");
+  const prompt = "sc with actions";
   res.send({
     tokens: tokens,
-    prompt: "service connector with actions",
-    classifiedAsset: AssetClassifierModel.classify(
-      "service connector with actions"
-    ),
+    prompt,
+    classifiedAsset: AssetClassifierModel.classify(prompt),
   });
 });
 
