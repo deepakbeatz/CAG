@@ -4,10 +4,11 @@ var { parseExcelFile } = require("../io/io-utils");
 class AssetClassifierModel {
   model;
   constructor() {
-    this.model = new nlp.BayesClassifier();
+    this.model = null;
   }
 
   initModel(path) {
+    this.model = new nlp.BayesClassifier();
     parseExcelFile(path).then((rows) => {
       const dataRows = rows.slice(1);
       if (dataRows && dataRows.length > 1) {

@@ -1,0 +1,157 @@
+const tf = require("@tensorflow/tfjs");
+const fs = require("fs");
+
+// Define the input text
+const text = "This is some example text for our GAN model.";
+
+// Create a vocabulary of unique characters in the text
+const vocab = Array.from(new Set(text)).sort();
+const vocabSize = vocab.length;
+
+// Create a mapping from characters to indices in the vocabulary
+const char2idx = new Map(vocab.map((char, i) => [char, i]));
+const idx2char = vocab;
+
+// Convert the text to a sequence of indices
+const textAsInt = Array.from(text).map(char => char2idx.get(char));
+const textLength = textAsInt.length;
+
+// Define the parameters of the model
+const embeddingDim = 256;
+const genUnits = 256;
+const discUnits = 256;
+const batchSize = 64;
+const epochs = 100;
+const seqLength = 50;
+
+// Define the generator model
+const generator = tf.sequential({
+  layers: [
+    tf.layers.embedding({
+      inputDim: vocabSize,
+      outputDim: embeddingDim,
+      inputLength: seqLength
+    }),
+    tf.layers.gru({
+      units: genUnits,
+      returnSequences: true
+    }),
+    tf.layers.timeDistributed({
+      layer: tf.layers.dense({
+        units: vocabSize,
+        activation: "softmax"
+      })
+    })
+  ]
+});
+
+// Define the discriminator model
+const discriminator = tf.sequential({
+  layers: [
+    tf.layers.embedding({
+      inputDim: vocabSize,
+      outputDim: embeddingDim,
+      inputLength: seqLength
+    }),
+    tf.layers.bidirectional({
+      layer: tf.layers.lstm({
+        units: discUnits
+      })
+    }),
+    tf.layers.dense({
+      units: 1,
+      activation: "sigmoid"
+    })
+  ]
+});
+
+// Define the combined model
+const gan = tf.sequential();
+gan.add(generator);
+gan.add(discriminator);
+
+// Compile the models
+generator.compile({
+  optimizer: tf.train.adam(),
+  loss: "categoricalCrossentropy"
+});
+discriminator.compile({
+  optimizer: tf.train.adam(),
+  loss: "binaryCrossentropy"
+});
+gan.compile({
+  optimizer: tf.train.adam(),
+  loss: "binaryCrossentropy"
+});
+
+// Create the training data
+const createDataset = () => {
+  const sequences = [];
+  for (let i = 0; i < textLength - seqLength; i++) {
+    sequences.push(textAsInt.slice(i, i + seqLength + 1));
+  }
+  return tf.data
+    .shuffle(sequences)
+    .map(sequence => {
+      const input = sequence.slice(0, seqLength);
+      const target = sequence.slice(1);
+      return { input, target };
+    })
+    .batch(batchSize)
+    .repeat();
+};
+const dataset = createDataset();
+
+// Define the training loop
+const train = async () => {
+  for (let epoch = 0; epoch < epochs; epoch++) {
+    let genLoss = 0;
+    let discLoss = 0;
+    let count = 0;
+    await dataset.forEachBatch(async ({ input, target }) => {
+      // Train the generator
+      const noise = tf.randomNormal([batchSize, seqLength, embeddingDim]);
+      const fake = generator.predict(noise);
+      const real = tf.expandDims(tf.oneHot(target, vocabSize), -1);
+      const genBatchLoss = discriminator.trainOnBatch(fake, tf.ones([batchSize, 1]));
+      genLoss += genBatchLoss;
+      count++;
+
+      // Train the discriminator on real and fake data
+      const discRealLoss = discriminator.trainOnBatch(tf.expandDims(tf.oneHot(input, vocabSize), -1), tf.ones([batchSize, 1]));
+      const discFakeLoss = discriminator.trainOnBatch(fake, tf.zeros([batchSize, 1]));
+      const discBatchLoss = (discRealLoss + discFakeLoss) / 2;
+      discLoss += discBatchLoss;
+
+      console.log(`Epoch ${epoch + 1}, Batch ${count}: Generator loss = ${genBatchLoss.toFixed(4)}, Discriminator loss = ${discBatchLoss.toFixed(4)}`);
+    });
+    genLoss /= count;
+    discLoss /= count;
+    console.log(`Epoch ${epoch + 1}: Generator loss = ${genLoss.toFixed(4)}, Discriminator loss = ${discLoss.toFixed(4)}`);
+  }
+};
+
+// Define the function to generate text
+const generate = async (length, temperature) => {
+  let generated = "";
+  let input = textAsInt.slice(0, seqLength);
+  for (let i = 0; i < length; i++) {
+    const logits = generator.predict(tf.oneHot(input, vocabSize).expandDims());
+    const preds = tf.squeeze(tf.random.categorical(logits.div(temperature), 1)).arraySync();
+    const char = idx2char[preds];
+    generated += char;
+    input = [...input.slice(1), preds[0]];
+  }
+  return generated;
+};
+
+// Assume the generate and train functions are defined as shown above
+
+// Train the GAN
+await train();
+
+// Generate some text
+const length = 100;
+const temperature = 1.0;
+const generatedText = await generate(length, temperature);
+console.log(generatedText);
