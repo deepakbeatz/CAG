@@ -38,7 +38,12 @@ app.get("/api/test", async (req, res) => {
 });
 
 app.post("/api/test/train", async (req, res) => {
-  await assetGANModel.loadModel("generic-asset-model", true);
+  const body = req.body;
+  const trainConfig = {
+    epochs: body.epochs || 50,
+    batchSize: body.batchSize || 10
+  };
+  await assetGANModel.loadModel("generic-asset-model", true, trainConfig);
   res.send({ status: "training started" });
 });
 

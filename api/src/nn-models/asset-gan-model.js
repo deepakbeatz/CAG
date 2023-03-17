@@ -21,7 +21,7 @@ class AssetGANModel {
     dataset;
     modelArtifacts;
     MAX_LENGTH = 30;
-    EPOCHS = 50;
+    EPOCHS = 100;
     BATCH_SIZE = 10;
 
     constructor() {
@@ -53,7 +53,7 @@ class AssetGANModel {
         this.loadModel(modelName);
     }
 
-    async loadModel(modelName, trainModel = false) {
+    async loadModel(modelName, trainModel = false, trainConfig = {}) {
         this.modelName = modelName;
         const generatorPath = `./src/nn-models/__models__/${modelName.toLowerCase()}-generator`;
         const discriminatorPath = `./src/nn-models/__models__/${modelName.toLowerCase()}-discriminator`;
@@ -70,7 +70,7 @@ class AssetGANModel {
             console.log(`--NNModelLogs: loaded NNModel ${this.modelName}`);
         } else {
             this.initGAN();
-            this.trainFitModel();
+            this.trainFitModel(trainConfig);
         }
     }
 
@@ -136,7 +136,8 @@ class AssetGANModel {
         this.initGANModel(this.generator, this.discriminator);
     }
 
-    createTrainDataset(sequences) {
+    createTrainDataset(sequences, trainConfig) {
+        const batchSize = trainConfig.batchSize || this.BATCH_SIZE;
         const mappedSequences = sequences.map((sequence) => {
             const [x, y] = splitSequenceToTrainParams([sequence]);
             const xTrain = tf.tensor(x);
@@ -145,19 +146,21 @@ class AssetGANModel {
         });
         this.dataset = tf.data
             .array(mappedSequences)
-            .batch(this.BATCH_SIZE);
+            .batch(batchSize);
     }
 
-    async trainGAN() {
+    async trainGAN(trainConfig) {
+        const epochs =  trainConfig.epochs || this.EPOCHS;
+        const batchSize = trainConfig.batchSize || this.BATCH_SIZE;
         let epoch;
-        for (epoch = 0; epoch < this.EPOCHS; epoch++) {
+        for (epoch = 0; epoch < epochs; epoch++) {
             let genLoss = 0;
             let discLoss = 0;
             let count = 0;
             await this.dataset.forEachAsync(async ({ xTrain, yTrain }) => {
                 // Train the generator
                 const xFake = tf.randomUniform(
-                    [this.BATCH_SIZE, 2],
+                    [batchSize, 2],
                     1,
                     this.vocabMap.size,
                     "int32"
@@ -185,7 +188,7 @@ class AssetGANModel {
                 );
                 const discFakeLoss = await this.discriminator.trainOnBatch(
                     yFake,
-                    tf.zeros([this.BATCH_SIZE, 1])
+                    tf.zeros([batchSize, 1])
                 );
                 const discBatchLoss = (discRealLoss + discFakeLoss) / 2;
                 discLoss += discBatchLoss;
@@ -201,10 +204,10 @@ class AssetGANModel {
 
     }
 
-    async trainFitModel() {
+    async trainFitModel(trainConfig) {
         const paddedSequence = padSequence(this.vocabSequences, this.MAX_LENGTH);
-        this.createTrainDataset(paddedSequence);
-        await this.trainGAN();
+        this.createTrainDataset(paddedSequence, trainConfig);
+        await this.trainGAN(trainConfig);
         this.saveModel();
         console.log("--NNModelLogs: GAN training completed!");
     }

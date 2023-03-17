@@ -16,7 +16,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"input\": \"nodes start inputFields\",\r\n    \"length\": 6\r\n}",
+							"raw": "{\r\n    \"input\": \"nodes start inputFields customerName\",\r\n    \"length\": 3\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -76,7 +76,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "",
+							"raw": "{\r\n    \"epochs\": 100,\r\n    \"batchSize\": 10\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"

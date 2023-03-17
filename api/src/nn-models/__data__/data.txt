@@ -178,3 +178,15 @@ process name test6process nodes start service end
 process name test7process nodes start inputFields customerName string assignment currentUser.name field customerName end
 process name test8process nodes start inputFields customerId string assignment currentUser.id field customerId end
 process name test4process nodes start inputFields name string age number address string outputFields customerId id end
+process name waitProcess1 nodes start wait duration 20 seconds end
+process name waitprocess2 nodes start wait duration 30 seconds end
+process name waitProcess3 nodes start input name string wait duration 1 hour end
+process name waitProcess1 nodes start wait duration 20 seconds end
+process name waitprocess2 nodes start wait duration 30 seconds end
+process name waitProcess3 nodes start input name string wait duration 1 hour end
+process name waitProcess1 nodes start wait duration 20 seconds end
+process name waitprocess2 nodes start wait duration 30 seconds end
+process name waitProcess3 nodes start input name string wait duration 1 hour end
+process name waitProcess1 nodes start wait duration 20 seconds end
+process name waitprocess2 nodes start wait duration 30 seconds end
+process name waitProcess3 nodes start input name string wait duration 1 hour end
