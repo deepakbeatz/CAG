@@ -24,7 +24,7 @@ assetClassifierModel.initModel(
   "./src/nn-models/__data__/asset-classifier-model-data.xlsx"
 );
 const assetGANModel = new AssetGANModel();
-assetGANModel.initModel("generic-asset-model", "./src/nn-models/__data__/data.txt");
+assetGANModel.initModel("generic-asset-model", "./src/nn-models/__data__/generic-corpus.txt");
 
 // End Points
 app.get("/api/test", async (req, res) => {
