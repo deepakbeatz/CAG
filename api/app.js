@@ -24,7 +24,10 @@ assetClassifierModel.initModel(
   "./src/nn-models/__data__/asset-classifier-model-data.xlsx"
 );
 const assetGANModel = new AssetGANModel();
-assetGANModel.initModel("generic-asset-model", "./src/nn-models/__data__/corpus/generic-corpus.txt");
+assetGANModel.initModel(
+  "generic-asset-model",
+  "./src/nn-models/__data__/corpus/generic-corpus.txt"
+);
 
 // End Points
 app.get("/api/test", async (req, res) => {
@@ -41,7 +44,7 @@ app.post("/api/test/train", async (req, res) => {
   const body = req.body;
   const trainConfig = {
     epochs: body.epochs || 50,
-    batchSize: body.batchSize || 10
+    batchSize: body.batchSize || 10,
   };
   await assetGANModel.loadModel("generic-asset-model", true, trainConfig);
   res.send({ status: "training started" });
@@ -51,7 +54,7 @@ app.post("/api/test/generateSequence", async (req, res) => {
   const body = req.body;
   res.send({
     generatedSequence: assetGANModel.generateSequence(
-      body.input || '',
+      body.input || "",
       body.length || 5
     ),
   });
@@ -60,21 +63,25 @@ app.post("/api/test/generateSequence", async (req, res) => {
 app.post("/api/test/generateRandom", async (req, res) => {
   const body = req.body;
   res.send({
-    generatedSequence: assetGANModel.generateRandomSequence(
-      body.length || 5
-    ),
+    generatedSequence: assetGANModel.generateRandomSequence(body.length || 5),
   });
 });
 
 app.post("/api/test/preprocess", async (req, res) => {
   const body = req.body;
-  nlpUtils.contextualGrouping(body.prompt, assetClassifierModel.classify(body.prompt));
+  nlpUtils.contextualGrouping(
+    body.prompt,
+    assetClassifierModel.classify(body.prompt)
+  );
   res.send({
     prompt: body.prompt,
     classifiedAsset: assetClassifierModel.classify(body.prompt),
-    preprocessed: nlpUtils.preprocess(body.prompt, assetClassifierModel.classify(body.prompt)),
+    preprocessed: nlpUtils.preprocess(
+      body.prompt,
+      assetClassifierModel.classify(body.prompt)
+    ),
   });
-})
+});
 
 // Server
 app.listen(PORT, () => console.log(`Server started on localhost:${PORT}`));
