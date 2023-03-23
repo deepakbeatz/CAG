@@ -24,7 +24,7 @@ assetClassifierModel.initModel(
   "./src/nn-models/__data__/asset-classifier-model-data.xlsx"
 );
 const assetGANModel = new AssetGANModel();
-assetGANModel.initModel("generic-asset-model", "./src/nn-models/__data__/generic-corpus.txt");
+assetGANModel.initModel("generic-asset-model", "./src/nn-models/__data__/corpus/generic-corpus.txt");
 
 // End Points
 app.get("/api/test", async (req, res) => {
@@ -65,6 +65,15 @@ app.post("/api/test/generateRandom", async (req, res) => {
     ),
   });
 });
+
+app.post("/api/test/preprocess", async (req, res) => {
+  const body = req.body;
+  res.send({
+    prompt: body.prompt,
+    classifiedAsset: assetClassifierModel.classify(body.prompt),
+    preprocessed: nlpUtils.preprocess(body.prompt, assetClassifierModel.classify(body.prompt)),
+  });
+})
 
 // Server
 app.listen(PORT, () => console.log(`Server started on localhost:${PORT}`));

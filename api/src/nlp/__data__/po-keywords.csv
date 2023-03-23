@@ -1,1 +1,14 @@
-name,description
+displayName
+isByCopy
+name
+xmlns
+xmlns$aetgt
+description
+detail
+field
+detail%%field
+detail%%field%%label
+detail%%field%%name
+detail%%field%%nullable
+detail%%field%%required
+detail%%field%%type
