@@ -1,11 +1,17 @@
 var nlp = require("natural");
 var { parseExcelFile } = require("../io/io-utils");
-var stringSimilarity = require("string-similarity");
+var stringSimilarity = require("string-similarity"); // Sørensen–Dice coefficient based similarity
 
 class KeywordsMapperModel {
   model;
   constructor() {
-    this.model = null;
+    this.dataMap = new Map();
+  }
+
+  addMapping(x, y) {
+    if (!this.dataMap.has(x)) {
+        this.dataMap.set(x, y);
+    }
   }
 
   initModel(path) {
@@ -17,21 +23,32 @@ class KeywordsMapperModel {
           if (row && row.length > 1) {
             const xData = row[0];
             const yData = row[1];
-            this.model.addDocument(xData, yData);
+            this.addMapping(xData, yData);
           }
         });
-        this.model.train();
         console.log("--NNModelLogs: KeywordsMapperModel initialized");
       }
     });
   }
 
-  classify(text) {
-    return this.model.classify(text);
-  }
-
-  getClassifications(text) {
-    return this.model.getClassifications(text);
+  getMapping(token) {
+    let maxSimilarity = {
+        word: '',
+        value: -1
+    };
+    for (const [key, value] of this.dataMap.entries()) {
+        const similarity = stringSimilarity.compareTwoStrings(token, key);
+        if (similarity > maxSimilarity.value) {
+            maxSimilarity = {
+                word: key,
+                value: similarity
+            } 
+        }
+    }
+    if (maxSimilarity.value > 0.75) {
+        return this.dataMap.get(maxSimilarity.word);
+    }
+    return token;
   }
 }
 

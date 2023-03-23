@@ -26,8 +26,7 @@ const spellCheck = (tokens, corpus) => {
 
 const mapToKeywords = (tokens, mapper) => {
   return tokens.map((token) => {
-    console.log(token, mapper.getClassifications(token));
-    return token
+    return mapper.getMapping(token);
   });
 }
 
