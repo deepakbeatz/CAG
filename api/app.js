@@ -68,6 +68,7 @@ app.post("/api/test/generateRandom", async (req, res) => {
 
 app.post("/api/test/preprocess", async (req, res) => {
   const body = req.body;
+  nlpUtils.contextualGrouping(body.prompt, assetClassifierModel.classify(body.prompt));
   res.send({
     prompt: body.prompt,
     classifiedAsset: assetClassifierModel.classify(body.prompt),
