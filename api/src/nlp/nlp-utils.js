@@ -47,6 +47,25 @@ const preprocess = (prompt, assetType) => {
   return mapToKeywords(tokens, mapper);
 };
 
+const isKeyword = (keywords, token, root) => {
+  let isKeywordVal = false;
+  if (root && root.includes("%%")) {
+    const childKeyIndex = keywords.findIndex(
+      (word) => word.token === `${root}%%${token}`
+    );
+    if (childKeyIndex !== -1) {
+      keywords[childKeyIndex].visited = true;
+    }
+    isKeywordVal =
+      childKeyIndex === -1 &&
+      keywords.findIndex((word) => word.token.includes(token)) !== -1;
+  } else {
+    isKeywordVal =
+      keywords.findIndex((word) => word.token.includes(token)) !== -1;
+  }
+  return isKeywordVal;
+};
+
 const contextualGrouping = (prompt, assetType) => {
   const mapper = getMapper(assetType) || {};
   const keywords = getAssetKeywords(assetType) || [];
@@ -62,7 +81,6 @@ const contextualGrouping = (prompt, assetType) => {
   };
 
   const decode = (word) => encodeMap.get(word) ?? word;
-
   const transformedTokens = prompt.split(" ").map((token) => {
     let updatedToken = encode(token);
     updatedToken = lemmatize(updatedToken);
@@ -78,56 +96,64 @@ const contextualGrouping = (prompt, assetType) => {
 
   const userKeyWords = [];
   transformedTokens.forEach((token, index) => {
-    if (keywords.find((word) => word.split("%%").includes(token))) {
-      userKeyWords.push({ index, token });
+    const keywordFound = keywords.find((word) =>
+      word.split("%%").includes(token)
+    );
+    if (keywordFound) {
+      userKeyWords.push({ index, token: keywordFound, visited: false });
     }
   });
+  // console.log("userKeyWords", userKeyWords);
 
   // cluster the neighboring tokens around the keywords together
   for (let i = 0; i < userKeyWords.length; i++) {
-    const cluster = [];
-    let left = userKeyWords[i].index;
-    let right = userKeyWords[i].index;
+    if (!userKeyWords[i].visited) {
+      const cluster = [];
+      let left = userKeyWords[i].index;
+      let right = userKeyWords[i].index;
 
-    cluster.push(decode(transformedTokens[userKeyWords[i].index]));
+      cluster.push(decode(transformedTokens[userKeyWords[i].index]));
 
-    while (left >= 0) {
-      if (left !== userKeyWords[i].index) {
-        const decodedToken = decode(transformedTokens[left]);
-        const isNoun =
-          posMap.get(decodedToken)?.includes("Noun") ||
-          posMap.get(decodedToken)?.includes("Adjective");
-        const isUserKeyword = userKeyWords.find(
-          (word) => word.token === decodedToken
-        );
-        if (isUserKeyword || !isNoun) {
-          break;
+      while (left >= 0) {
+        if (left !== userKeyWords[i].index) {
+          const isNoun =
+            posMap.get(transformedTokens[left])?.includes("Noun") ||
+            posMap.get(transformedTokens[left])?.includes("Adjective");
+          const keyword = isKeyword(
+            userKeyWords,
+            transformedTokens[left],
+            userKeyWords[i].token
+          );
+          if (keyword || !isNoun) {
+            break;
+          }
+          cluster.push(decode(transformedTokens[left]));
         }
-        cluster.push(decode(transformedTokens[left], encodeMap));
+        left--;
       }
-      left--;
-    }
 
-    while (right < transformedTokens.length) {
-      if (right !== userKeyWords[i].index) {
-        const decodedToken = decode(transformedTokens[right]);
-        const isNoun =
-          posMap.get(decodedToken)?.includes("Noun") ||
-          posMap.get(decodedToken)?.includes("Adjective");
-        const isUserKeyword = userKeyWords.find(
-          (word) => word.token === decodedToken
-        );
-        if (isUserKeyword) {
-          break;
+      while (right < transformedTokens.length) {
+        if (right !== userKeyWords[i].index) {
+          const isNoun =
+            posMap.get(transformedTokens[right])?.includes("Noun") ||
+            posMap.get(transformedTokens[right])?.includes("Adjective");
+          const keyword = isKeyword(
+            userKeyWords,
+            transformedTokens[right],
+            userKeyWords[i].token
+          );
+          if (keyword) {
+            break;
+          }
+          if (isNoun) {
+            cluster.push(decode(transformedTokens[right]));
+          }
         }
-        if (isNoun) {
-          cluster.push(decode(transformedTokens[right], encodeMap));
-        }
+        right++;
       }
-      right++;
-    }
 
-    console.log(`cluster-${i}`, cluster);
+      console.log(`cluster-${i}`, cluster);
+    }
   }
 };
 
