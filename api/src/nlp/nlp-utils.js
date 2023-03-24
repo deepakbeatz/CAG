@@ -57,6 +57,20 @@ const preprocess = (prompt, assetType) => {
   }).filter(token => !stopwordsMap.has(token)), mapper);
 }
 
+const isKeyword = (keywords, token, root) => {
+  let isKeywordVal = false;
+  if (root && root.includes("%%")) {
+    const childKeyIndex = keywords.findIndex((word) => word.token === `${root}%%${token}`);
+    if (childKeyIndex !== -1) {
+      keywords[childKeyIndex].visited = true;
+    }
+    isKeywordVal = childKeyIndex === -1 && keywords.findIndex((word) => word.token.includes(token)) !== -1;
+  } else {
+    isKeywordVal = keywords.findIndex((word) => word.token.includes(token)) !== -1;
+  }
+  return isKeywordVal;
+}
+
 const contextualGrouping = (prompt, assetType) => {
   const mapper = getMapper(assetType) || {};
   const keywords = getAssetKeywords(assetType) || [];
@@ -65,37 +79,43 @@ const contextualGrouping = (prompt, assetType) => {
   const posMap = new Map(tokensJSON[0].terms.map((term) => [term.text, term.tags]));
   const userKeyWords = [];
   transformedTokens.forEach((token, index) => {
-    if (keywords.find((word) => word === token)) {
-      userKeyWords.push({ index, token });
+    const keywordFound = keywords.find((word) => word.split("%%").includes(token));
+    if (keywordFound) {
+      userKeyWords.push({ index, token: keywordFound, visited: false });
     }
   });
+  console.log('userKeyWords', userKeyWords);
   // cluster the neighboring tokens around the keywords together
   for (let i = 0; i < userKeyWords.length; i++) {
-    const cluster = []
-    let left = userKeyWords[i].index;
-    let right = userKeyWords[i].index;
-    cluster.push(transformedTokens[userKeyWords[i].index]);
-    while (left >= 0) {
-      if (left !== userKeyWords[i].index) {
-        const isNoun = posMap.get(transformedTokens[left]).includes("Noun") || posMap.get(transformedTokens[left]).includes("Adjective");
-        if (userKeyWords.find((word) => word === transformedTokens[left] || !isNoun)) {
-          break;
+    if (!userKeyWords[i].visited) {
+      const cluster = []
+      let left = userKeyWords[i].index;
+      let right = userKeyWords[i].index;
+      cluster.push(transformedTokens[userKeyWords[i].index]);
+      while (left >= 0) {
+        if (left !== userKeyWords[i].index) {
+          const isNoun = posMap.get(transformedTokens[left]).includes("Noun") || posMap.get(transformedTokens[left]).includes("Adjective");
+          if (isKeyword(userKeyWords, transformedTokens[left], userKeyWords[i].token) || !isNoun) {
+            break;
+          }
+          cluster.push(transformedTokens[left]);
         }
-        cluster.push(transformedTokens[left]);
+        left--;
       }
-      left--;
-    }
-    while (right < transformedTokens.length) {
-      if (right !== userKeyWords[i].index) {
-        const isNoun = posMap.get(transformedTokens[right]).includes("Noun") || posMap.get(transformedTokens[right]).includes("Adjective");
-        if (userKeyWords.find((word) => word === transformedTokens[right] || !isNoun)) {
-          break;
+      while (right < transformedTokens.length) {
+        if (right !== userKeyWords[i].index) {
+          const isNoun = posMap.get(transformedTokens[right]).includes("Noun") || posMap.get(transformedTokens[right]).includes("Adjective");
+          if (isKeyword(userKeyWords, transformedTokens[right], userKeyWords[i].token)) {
+            break;
+          }
+          if (isNoun) {
+            cluster.push(transformedTokens[right]);
+          }
         }
-        cluster.push(transformedTokens[right]);
+        right++;
       }
-      right++;
+      console.log(`cluster-${i}`, cluster);
     }
-    console.log(`cluster-${i}`, cluster);
   }
 }
 
