@@ -51,17 +51,26 @@ const isKeyword = (keywords, token, root) => {
   let isKeywordVal = false;
   if (root && root.includes("%%")) {
     const childKeyIndex = keywords.findIndex(
-      (word) => word.token === `${root}%%${token}`
+      (word) => word.token === `${root}%%${token}` && !word.visited
     );
     if (childKeyIndex !== -1) {
       keywords[childKeyIndex].visited = true;
     }
-    isKeywordVal =
-      childKeyIndex === -1 &&
-      keywords.findIndex((word) => word.token.includes(token)) !== -1;
+    const keywordIndex = keywords.findIndex(
+      (word) => word.token.split("%%").includes(token) && !word.visited
+    );
+    // if (keywordIndex !== -1) {
+    //   keywords[keywordIndex].visited = true;
+    // }
+    isKeywordVal = childKeyIndex === -1 && keywordIndex !== -1;
   } else {
-    isKeywordVal =
-      keywords.findIndex((word) => word.token.includes(token)) !== -1;
+    const keywordIndex = keywords.findIndex(
+      (word) => word.token === token && !word.visited
+    );
+    // if (keywordIndex !== -1) {
+    //   keywords[keywordIndex].visited = true;
+    // }
+    isKeywordVal = keywordIndex !== -1;
   }
   return isKeywordVal;
 };
@@ -103,15 +112,22 @@ const contextualGrouping = (prompt, assetType) => {
       userKeyWords.push({ index, token: keywordFound, visited: false });
     }
   });
-  // console.log("userKeyWords", userKeyWords);
+  console.log("userKeyWords", userKeyWords);
 
   // cluster the neighboring tokens around the keywords together
   for (let i = 0; i < userKeyWords.length; i++) {
+    console.log("userKeyWords", userKeyWords[i].index, userKeyWords);
     if (!userKeyWords[i].visited) {
       const cluster = [];
+      console.log(transformedTokens[userKeyWords[i].index]);
       let left = userKeyWords[i].index;
       let right = userKeyWords[i].index;
 
+      // const keywordIndex = userKeyWords.findIndex((word) => word.token === userKeyWords[i].index);
+      // console.log(userKeyWords[i].index)
+      // if(keywordIndex !== -1) {
+      //   userKeyWords[keywordIndex].visited = true;
+      // }
       cluster.push(decode(transformedTokens[userKeyWords[i].index]));
 
       while (left >= 0) {
