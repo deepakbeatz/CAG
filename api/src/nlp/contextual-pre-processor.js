@@ -75,7 +75,6 @@ const isKeyword = (keywords, token, root) => {
             (word) => (word.token === token.token || word.keyword === token.keyword)
         );
         isKeywordToken = keywordIndex !== -1 && !isChildToken(token, root);
-        console.log('1', token.token, root.token, isKeywordToken, keywordIndex);
     } else {
         const keywordIndex = keywords.findIndex(
             (word) => (word.token === token.token || word.keyword === token.keyword)
@@ -125,7 +124,6 @@ class ContextualPreProcessor {
                 userTokenKeyWords.push(tokenWord);
             }
         });
-        console.log(userTokenKeyWords);
         // cluster the neighboring tokens around the keywords together
         for (let i = 0; i < userTokenKeyWords.length; i++) {
             const clusterGroup = [];
@@ -162,11 +160,9 @@ class ContextualPreProcessor {
                             userTokenKeyWords[i]
                         );
                         if (isConjunction(promptTokenWords[right].token, posMap) && (i + 1 < userTokenKeyWords.length && right < userTokenKeyWords[i + 1].index && !isChildToken(userTokenKeyWords[i+1], userTokenKeyWords[i]))) {
-                            console.log('2', 'break');
                             break;
                         }
                         if (keyword) {
-                            console.log('3', 'break');
                             break;
                         }
                         if (isNoun(promptTokenWords[right], posMap)) {
@@ -190,11 +186,12 @@ class ContextualPreProcessor {
         return this.clusters;
     }
 
-    getUserTokens() {
-        this.clusters.forEach((cluster) => {
+    getUserTokens(prompt) {
+        const tokenClusters = this.cluster(prompt);
+        return tokenClusters.map((cluster) => {
             const [root, ...tokens] = cluster;
-            console.log(this.schema.getTokens(root, tokens));
-        });
+            return this.schema.getTokens(root, tokens);
+        }).flat();
     }
 }
 

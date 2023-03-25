@@ -41,10 +41,10 @@ class POSchema {
                         if (keySchemaVal[1] === 'boolean') {
                             const boolValues = ['true', 'false'];
                             if (i + 1 < tokens.length && boolValues.includes(tokens[i+1].token)) {
-                                userTokens.push(tokens[i].keyword);
+                                userTokens.push(`${tokens[i].keyword}%%${tokens[i+1].token}`);
                                 tokens[i+1].visited = true;
                             } else {
-                                userTokens.push(tokens[i].keyword);
+                                userTokens.push(`${tokens[i].keyword}%%true`);
                             }
                         } else {
                             if (i + 1 < tokens.length) {

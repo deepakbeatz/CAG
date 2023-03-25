@@ -83,5 +83,14 @@ app.post("/api/test/preprocess", async (req, res) => {
   });
 });
 
+app.post("/api/model/assetgan/generate", async (req, res) => {
+  const body = req.body;
+  const asset = assetClassifierModel.classify(body.prompt);
+  const userTokens = nlpUtils.getUserTokens(body.prompt, asset);
+  // const enrichedTokens = nlpUtils.enrichTokens(userTokens);
+  // const jsonData = jsonUtils.toJSON(enrichedTokens);
+  res.send({prompt: body.prompt, classifiedAsset: asset, userTokens});
+});
+
 // Server
 app.listen(PORT, () => console.log(`Server started on localhost:${PORT}`));

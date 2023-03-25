@@ -45,13 +45,12 @@ const preprocess = (prompt, assetType) => {
   return mapToKeywords(tokens, mapper);
 };
 
-const contextualGrouping = (prompt, assetType) => {
+const getUserTokens = (prompt, assetType) => {
   const mapper = getMapper(assetType) || {};
   const keywords = getAssetKeywords(assetType) || [];
   const schema = getSchema(assetType) || [];
   const contextualPreProcessor = new ContextualPreProcessor(keywords, mapper, new schema());
-  console.log(contextualPreProcessor.cluster(prompt).map(cluster => cluster.map(word => word.token)));
-  contextualPreProcessor.getUserTokens();
+  return contextualPreProcessor.getUserTokens(prompt);
 };
 
 module.exports = {
@@ -60,5 +59,5 @@ module.exports = {
   lemmatize,
   spellCheck,
   preprocess,
-  contextualGrouping,
+  getUserTokens,
 };
