@@ -26,7 +26,7 @@ class POSchema {
 
     getTokens(root, tokens) {
         const filteredSchemaMap = {};
-        const filteredRootKeys = Object.keys(keywordsSchemaMap).filter((key) => key.includes(root.keyword));
+        const filteredRootKeys = Object.keys(keywordsSchemaMap).filter((key) => root.keyword.includes("%%") && key.includes(root.keyword) || key === root.keyword);
         filteredRootKeys.forEach((key) => {
             if (key) {
                 filteredSchemaMap[key] = keywordsSchemaMap[key];
@@ -43,6 +43,8 @@ class POSchema {
                             if (i + 1 < tokens.length && boolValues.includes(tokens[i+1].token)) {
                                 userTokens.push(tokens[i].keyword);
                                 tokens[i+1].visited = true;
+                            } else {
+                                userTokens.push(tokens[i].keyword);
                             }
                         } else {
                             if (i + 1 < tokens.length) {

@@ -50,7 +50,7 @@ const contextualGrouping = (prompt, assetType) => {
   const keywords = getAssetKeywords(assetType) || [];
   const schema = getSchema(assetType) || [];
   const contextualPreProcessor = new ContextualPreProcessor(keywords, mapper, new schema());
-  console.log(contextualPreProcessor.cluster(prompt));
+  console.log(contextualPreProcessor.cluster(prompt).map(cluster => cluster.map(word => word.token)));
   contextualPreProcessor.getUserTokens();
 };
 

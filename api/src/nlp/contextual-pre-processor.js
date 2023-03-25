@@ -7,9 +7,9 @@ class TokenWord {
     visited;
     constructor(index, token, visited, keyword = null) {
         this.index = index,
-        this.token = token,
-        this.visited = visited,
-        this.keyword = keyword
+            this.token = token,
+            this.visited = visited,
+            this.keyword = keyword
     }
 }
 
@@ -43,20 +43,25 @@ const isChildToken = (token, root) => {
 }
 
 const populateChildKeyword = (keywords, token, root) => {
-    const filteredKeys = keywords.filter((keyword) => keyword.split("%%").includes(token.token));
-    token.keyword = null;
-    filteredKeys.forEach((key) => {
-        if (key.includes(root.keyword) && token.index > root.index) {
-            if (!token.keyword) {
-                token.keyword = key;
+    if (root.keyword.includes('%%')) {
+        const filteredKeys = keywords.filter((keyword) => keyword.split("%%").includes(token.token));
+        token.keyword = null;
+        filteredKeys.forEach((key) => {
+            if (key.includes(root.keyword) && token.index > root.index) {
+                if (!token.keyword) {
+                    token.keyword = key;
+                }
             }
-        }
-    })
+        })
+    }
 }
 
 const isNoun = (token, posMap) => {
-    return posMap.get(token).includes("Noun") ||
-        posMap.get(token).includes("Adjective");
+    if (!token.keyword) {
+        return posMap.get(token.token).includes("Noun") ||
+            posMap.get(token.token).includes("Adjective");
+    }
+    return true;
 }
 
 const isConjunction = (token, posMap) => {
@@ -65,14 +70,15 @@ const isConjunction = (token, posMap) => {
 
 const isKeyword = (keywords, token, root) => {
     let isKeywordToken = false;
-    if (root && root.token.includes("%%")) {
+    if (root && root.keyword) {
         const keywordIndex = keywords.findIndex(
-            (word) => word.token === token.token && !word.visited
+            (word) => (word.token === token.token || word.keyword === token.keyword)
         );
-        isKeywordToken = keywordIndex !== -1 || !isChildToken(token, root);
+        isKeywordToken = keywordIndex !== -1 && !isChildToken(token, root);
+        console.log('1', token.token, root.token, isKeywordToken, keywordIndex);
     } else {
         const keywordIndex = keywords.findIndex(
-            (word) => word.token === token.token && !word.visited
+            (word) => (word.token === token.token || word.keyword === token.keyword)
         );
         isKeywordToken = keywordIndex !== -1;
     }
@@ -91,7 +97,7 @@ class ContextualPreProcessor {
     }
 
     transform(prompt, encodeMap) {
-        const transformedTokens = prompt.replace(",", " and").split(/\s+/).map((token) => {
+        const transformedTokens = prompt.replace(/,/g, " and ").split(/\s+/).map((token) => {
             let updatedToken = encode(token, encodeMap);
             updatedToken = lemmatize(updatedToken);
             return this.mapper.getMapping(updatedToken);
@@ -119,6 +125,7 @@ class ContextualPreProcessor {
                 userTokenKeyWords.push(tokenWord);
             }
         });
+        console.log(userTokenKeyWords);
         // cluster the neighboring tokens around the keywords together
         for (let i = 0; i < userTokenKeyWords.length; i++) {
             const clusterGroup = [];
@@ -130,40 +137,42 @@ class ContextualPreProcessor {
                 userTokenKeyWords[i].visited = true;
                 while (left >= 0) {
                     if (left !== userTokenKeyWords[i].index) {
-                        promptTokenWords[left].visited = true;
                         populateChildKeyword(this.keywords, promptTokenWords[left], userTokenKeyWords[i]);
                         const keyword = isKeyword(
                             userTokenKeyWords,
                             promptTokenWords[left],
                             userTokenKeyWords[i]
                         );
-                        if (keyword || !isNoun(promptTokenWords[left].token, posMap)) {
+                        if (keyword || !isNoun(promptTokenWords[left], posMap)) {
                             break;
                         }
                         promptTokenWords[left].token = decode(promptTokenWords[left].token, encodeMap)
                         clusterGroup.push(promptTokenWords[left]);
+                        promptTokenWords[left].visited = true;
                     }
                     left--;
                 }
 
                 while (right < promptTokenWords.length) {
                     if (right !== userTokenKeyWords[i].index) {
-                        promptTokenWords[right].visited = true;
                         populateChildKeyword(this.keywords, promptTokenWords[right], userTokenKeyWords[i]);
                         const keyword = isKeyword(
                             userTokenKeyWords,
                             promptTokenWords[right],
                             userTokenKeyWords[i]
                         );
-                        if (isConjunction(promptTokenWords[right].token, posMap) && (i !== userTokenKeyWords.length - 1)) {
+                        if (isConjunction(promptTokenWords[right].token, posMap) && (i + 1 < userTokenKeyWords.length && right < userTokenKeyWords[i + 1].index && !isChildToken(userTokenKeyWords[i+1], userTokenKeyWords[i]))) {
+                            console.log('2', 'break');
                             break;
                         }
                         if (keyword) {
+                            console.log('3', 'break');
                             break;
                         }
-                        if (isNoun(promptTokenWords[right].token, posMap)) {
-                            promptTokenWords[right].token = decode(promptTokenWords[right].token, encodeMap)
+                        if (isNoun(promptTokenWords[right], posMap)) {
+                            promptTokenWords[right].token = decode(promptTokenWords[right].token, encodeMap);
                             clusterGroup.push(promptTokenWords[right]);
+                            promptTokenWords[right].visited = true;
                         }
                     }
                     right++;
@@ -173,10 +182,10 @@ class ContextualPreProcessor {
         }
         // reset visited flags
         this.clusters = this.clusters.map((clusterEntry) =>
-          clusterEntry.map((entry) => {
-            entry.visited = false;
-            return entry;
-          })
+            clusterEntry.map((entry) => {
+                entry.visited = false;
+                return entry;
+            })
         );
         return this.clusters;
     }
