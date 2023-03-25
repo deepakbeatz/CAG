@@ -42,12 +42,12 @@ class POSchema {
                             const boolValues = ['true', 'false'];
                             if (i + 1 < tokens.length && boolValues.includes(tokens[i+1].token)) {
                                 userTokens.push(tokens[i].keyword);
-                                tokens[i+1].visited === true;
+                                tokens[i+1].visited = true;
                             }
                         } else {
                             if (i + 1 < tokens.length) {
                                 userTokens.push(`${tokens[i].keyword}%%${tokens[i+1].token}`);
-                                tokens[i+1].visited === true;
+                                tokens[i+1].visited = true;
                             }
                         }
                     }
@@ -55,18 +55,23 @@ class POSchema {
                     let isKeySet = false;
                     const filteredKeys = Object.entries(filteredSchemaMap).filter(([key, value]) => value.split("|").includes(tokens[i].token));
                     if (filteredKeys.length > 0) {
-                        const filteredKey = filteredKeys[0][0];
-                        if (filteredKey) {
-                            userTokens.push(`${filteredKey}%%${tokens[i].token}`);
-                        }
+                        const filteredKeyArr = filteredKeys;
+                        filteredKeyArr.forEach((filteredKey) => {
+                            if (filteredKey) {
+                                userTokens.push(`${filteredKey[0]}%%${tokens[i].token}`);
+                                isKeySet = true;
+                            }
+                        });
                     }
                     if (!isKeySet) {
                         const filteredKeys = Object.entries(filteredSchemaMap).filter(([key, value]) => value === 'any');
                         if (filteredKeys.length > 0) {
-                            const filteredKey = filteredKeys[0][0];
-                            if (filteredKey) {
-                                userTokens.push(`${filteredKey}%%${tokens[i].token}`);
-                            }
+                            const filteredKeyArr = filteredKeys;
+                            filteredKeyArr.forEach((filteredKey) => {
+                                if (filteredKey) {
+                                    userTokens.push(`${filteredKey[0]}%%${tokens[i].token}`);
+                                }
+                            });
                         }
                     }
                 }
