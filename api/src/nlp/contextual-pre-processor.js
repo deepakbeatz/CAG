@@ -5,10 +5,11 @@ class TokenWord {
     index;
     token;
     visited;
-    constructor(index, token, visited) {
+    constructor(index, token, visited, keyword = null) {
         this.index = index,
         this.token = token,
-        this.visited = visited
+        this.visited = visited,
+        this.keyword = keyword
     }
 }
 
@@ -35,7 +36,22 @@ const encode = (token, encodeMap) => {
 const decode = (word, encodeMap) => (encodeMap.get(word) || word).replace('+', ' ');
 
 const isChildToken = (token, root) => {
-    return root.token.includes(token.token) && token.index > root.index;
+    if (token.keyword) {
+        return token.keyword.includes(root.keyword) && token.index > root.index;
+    }
+    return false;
+}
+
+const populateChildKeyword = (keywords, token, root) => {
+    const filteredKeys = keywords.filter((keyword) => keyword.split("%%").includes(token.token));
+    token.keyword = null;
+    filteredKeys.forEach((key) => {
+        if (key.includes(root.keyword) && token.index > root.index) {
+            if (!token.keyword) {
+                token.keyword = key;
+            }
+        }
+    })
 }
 
 const isNoun = (token, posMap) => {
@@ -99,6 +115,7 @@ class ContextualPreProcessor {
                 word.split("%%").includes(tokenWord.token)
             );
             if (keywordFound) {
+                tokenWord.keyword = keywordFound;
                 userTokenKeyWords.push(tokenWord);
             }
         });
@@ -108,11 +125,13 @@ class ContextualPreProcessor {
             if (!userTokenKeyWords[i].visited) {
                 let left = userTokenKeyWords[i].index;
                 let right = userTokenKeyWords[i].index;
-                clusterGroup.push(decode(promptTokenWords[userTokenKeyWords[i].index].token, encodeMap));
+                promptTokenWords[userTokenKeyWords[i].index].token = decode(promptTokenWords[userTokenKeyWords[i].index].token, encodeMap)
+                clusterGroup.push(promptTokenWords[userTokenKeyWords[i].index]);
                 userTokenKeyWords[i].visited = true;
                 while (left >= 0) {
                     if (left !== userTokenKeyWords[i].index) {
                         promptTokenWords[left].visited = true;
+                        populateChildKeyword(this.keywords, promptTokenWords[left], userTokenKeyWords[i]);
                         const keyword = isKeyword(
                             userTokenKeyWords,
                             promptTokenWords[left],
@@ -121,7 +140,8 @@ class ContextualPreProcessor {
                         if (keyword || !isNoun(promptTokenWords[left].token, posMap)) {
                             break;
                         }
-                        clusterGroup.push(decode(promptTokenWords[left].token, encodeMap));
+                        promptTokenWords[left].token = decode(promptTokenWords[left].token, encodeMap)
+                        clusterGroup.push(promptTokenWords[left]);
                     }
                     left--;
                 }
@@ -129,6 +149,7 @@ class ContextualPreProcessor {
                 while (right < promptTokenWords.length) {
                     if (right !== userTokenKeyWords[i].index) {
                         promptTokenWords[right].visited = true;
+                        populateChildKeyword(this.keywords, promptTokenWords[right], userTokenKeyWords[i]);
                         const keyword = isKeyword(
                             userTokenKeyWords,
                             promptTokenWords[right],
@@ -141,7 +162,8 @@ class ContextualPreProcessor {
                             break;
                         }
                         if (isNoun(promptTokenWords[right].token, posMap)) {
-                            clusterGroup.push(decode(promptTokenWords[right].token, encodeMap));
+                            promptTokenWords[right].token = decode(promptTokenWords[right].token, encodeMap)
+                            clusterGroup.push(promptTokenWords[right]);
                         }
                     }
                     right++;
@@ -149,15 +171,21 @@ class ContextualPreProcessor {
                 this.clusters.push(clusterGroup);
             }
         }
+        // reset visited flags
+        this.clusters = this.clusters.map((clusterEntry) =>
+          clusterEntry.map((entry) => {
+            entry.visited = false;
+            return entry;
+          })
+        );
         return this.clusters;
     }
 
     getUserTokens() {
         this.clusters.forEach((cluster) => {
-            const [keyword, ...tokens] = cluster;
-            console.log(this.schema.getTokens(keyword, tokens));
+            const [root, ...tokens] = cluster;
+            console.log(this.schema.getTokens(root, tokens));
         });
-        
     }
 }
 

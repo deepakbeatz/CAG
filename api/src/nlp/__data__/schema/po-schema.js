@@ -9,8 +9,8 @@ const keywordsSchemaMap = {
     'detail%%field': 'label|name|nullable|required|type',
     'detail%%field%%label': 'any',
     'detail%%field%%name': 'any',
-    'detail%%field%%nullable': 'nullable',
-    'detail%%field%%required': 'required',
+    'detail%%field%%nullable': 'boolean',
+    'detail%%field%%required': 'boolean',
     'detail%%field%%type': 'attachment|attachments|checkbox|currency|date|datetime|email|formattedtext|image|integer|multiselectpicklist|number|objectlist|percent|phone|picklist|text',
 }
 
@@ -24,32 +24,54 @@ class POSchema {
         this.userTokensMap.set(token, true);
     }
 
-    getTokens(keyword, tokens) {
-        const userTokens = [];
-        tokens.forEach((token) => {
-            let entries;
-            if (token) {
-                let isKeywordPresent = false;
-                entries = Object.entries(keywordsSchemaMap).filter(([key, value]) => key.split("%%").includes(keyword) && value.split("|").includes(token));
-                if (entries[0]) {
-                    if (entries[0][0]) {
-                        isKeywordPresent = true;
-                        userTokens.push(entries[0][0]);
-                    }
-                }
-                entries = Object.entries(keywordsSchemaMap).filter(([key, value]) => key === token);
-                if (entries[0]) {
-                    if (entries[0][0]) {
-                        userTokens.push(entries[0][0]);
-                    }                }
-                entries = Object.entries(keywordsSchemaMap).filter(([key, value]) => (!keyword || (keyword && key.split("%%").includes(keyword))) && value === 'any' && !isKeywordPresent);
-                if (entries[0]) {
-                    if (entries[0][0]) {
-                        userTokens.push(entries);
-                    } 
-                }
+    getTokens(root, tokens) {
+        const filteredSchemaMap = {};
+        const filteredRootKeys = Object.keys(keywordsSchemaMap).filter((key) => key.includes(root.keyword));
+        filteredRootKeys.forEach((key) => {
+            if (key) {
+                filteredSchemaMap[key] = keywordsSchemaMap[key];
             }
         });
+        const userTokens = []
+        for (let i =0; i < tokens.length; i++) {
+            if (!tokens[i].visited) {
+                if (tokens[i].keyword) {
+                    const keySchemaVal = Object.entries(filteredSchemaMap).find(([key, value]) => key === tokens[i].keyword) || [];
+                    if (keySchemaVal.length > 0) {
+                        if (keySchemaVal[1] === 'boolean') {
+                            const boolValues = ['true', 'false'];
+                            if (i + 1 < tokens.length && boolValues.includes(tokens[i+1].token)) {
+                                userTokens.push(tokens[i].keyword);
+                                tokens[i+1].visited === true;
+                            }
+                        } else {
+                            if (i + 1 < tokens.length) {
+                                userTokens.push(`${tokens[i].keyword}%%${tokens[i+1].token}`);
+                                tokens[i+1].visited === true;
+                            }
+                        }
+                    }
+                } else {
+                    let isKeySet = false;
+                    const filteredKeys = Object.entries(filteredSchemaMap).filter(([key, value]) => value.split("|").includes(tokens[i].token));
+                    if (filteredKeys.length > 0) {
+                        const filteredKey = filteredKeys[0][0];
+                        if (filteredKey) {
+                            userTokens.push(`${filteredKey}%%${tokens[i].token}`);
+                        }
+                    }
+                    if (!isKeySet) {
+                        const filteredKeys = Object.entries(filteredSchemaMap).filter(([key, value]) => value === 'any');
+                        if (filteredKeys.length > 0) {
+                            const filteredKey = filteredKeys[0][0];
+                            if (filteredKey) {
+                                userTokens.push(`${filteredKey}%%${tokens[i].token}`);
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return userTokens;
     }
 }
