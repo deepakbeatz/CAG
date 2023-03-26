@@ -1,12 +1,10 @@
 import React from "react";
 
-const InputCAG = ({ inputValue, setInputValue }: any) => {
+const InputCAG: React.FC<any> = ({ inputVal, updateVal }: any) => {
   return (
     <textarea
-      value={inputValue}
-      onChange={(event: any) => {
-        setInputValue(event.target.value);
-      }}
+      value={inputVal}
+      onChange={(e) => updateVal(e.target.value)}
       placeholder="Enter your prompt here"
     />
   );

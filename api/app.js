@@ -9,6 +9,7 @@ var AssetClassifierModel = require("./src/nn-models/asset-classifier-model"),
   AssetGANModel = require("./src/nn-models/asset-gan-model");
 
 // Configurations
+const path = __dirname + "/views/";
 const app = express();
 app.use(cors());
 app.use(
@@ -17,9 +18,10 @@ app.use(
   })
 );
 app.use(bodyParser.json());
+app.use(express.static(path));
 
 // Variables
-var PORT = process.env.PORT || 5000;
+var PORT = process.env.PORT || 3000;
 const assetClassifierModel = new AssetClassifierModel();
 assetClassifierModel.initModel(
   "./src/nn-models/__data__/asset-classifier-model-data.xlsx"
@@ -110,6 +112,10 @@ app.post("/api/json/data", async (req, res) => {
     jsonData
   }
   res.send({jsonPayload});
+});
+
+app.get("/", function (req, res) {
+  res.sendFile(path + "index.html");
 });
 
 // Server
