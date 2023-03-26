@@ -23,6 +23,9 @@ class POEnricherModel {
                 "xmlns$aetgt": "http:\/\/schemas.active-endpoints.com\/appmodules\/repository\/2010\/10\/avrepository.xsd",
                 "description": {},
                 "tags": {},
+                detail: {
+                    field: [],
+                }
             }
         };
         const aiToggle = false;
