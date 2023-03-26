@@ -91,14 +91,23 @@ app.post("/api/model/assetgan/generate", async (req, res) => {
   const body = req.body;
   const asset = assetClassifierModel.classify(body.prompt);
   const userTokens = nlpUtils.getUserTokens(body.prompt, asset);
-  const jsonData = nlpUtils.enrichTokensToJSON(userTokens, assetGANModel, asset);
+  const jsonData = nlpUtils.enrichTokensToJSON(
+    userTokens,
+    assetGANModel,
+    asset
+  );
   const id = Math.floor(Math.random() * 10000000000);
   const jsonPayload = {
     id: `${id}`,
-    jsonData
-  }
+    jsonData,
+  };
   jsonMap.set(`${id}`, jsonData);
-  res.send({prompt: body.prompt, classifiedAsset: asset, userTokens, jsonPayload});
+  res.send({
+    prompt: body.prompt,
+    classifiedAsset: asset,
+    userTokens,
+    jsonPayload,
+  });
 });
 
 app.post("/api/json/data", async (req, res) => {
@@ -109,9 +118,9 @@ app.post("/api/json/data", async (req, res) => {
   }
   const jsonPayload = {
     id: body.id,
-    jsonData
-  }
-  res.send({jsonPayload});
+    jsonData,
+  };
+  res.send({ jsonPayload });
 });
 
 app.get("/", function (req, res) {

@@ -39,7 +39,7 @@ const App: React.FC = () => {
       <div className="text-editor">
         <InputCAG inputVal={input} updateVal={setInput} />
         <button onClick={generateJson}>Generate</button>
-        <OutputCAG outputVal={result?.jsonData ?? null} />
+        <OutputCAG outputVal={result?.jsonPayload?.jsonData ?? null} />
       </div>
     </div>
   );
