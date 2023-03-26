@@ -1,7 +1,7 @@
 import React from "react";
 
-const OutputCAG = () => {
-    return <textarea />;
+const OutputCAG = ({ outputValue = "" }) => {
+  return <textarea value={outputValue} />;
 };
 
 export default OutputCAG;
