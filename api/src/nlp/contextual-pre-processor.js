@@ -33,7 +33,7 @@ const encode = (token, encodeMap) => {
     return token;
 };
 
-const decode = (word, encodeMap) => (encodeMap.get(word) || word).replace('+', ' ');
+const decode = (word, encodeMap) => (encodeMap.get(word) || word).replace(/\+/g, ' ');
 
 const isChildToken = (token, root) => {
     if (token.keyword) {

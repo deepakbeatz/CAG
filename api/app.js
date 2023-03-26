@@ -88,7 +88,6 @@ app.post("/api/model/assetgan/generate", async (req, res) => {
   const body = req.body;
   const asset = assetClassifierModel.classify(body.prompt);
   const userTokens = nlpUtils.getUserTokens(body.prompt, asset);
-  console.log(asset);
   const jsonData = nlpUtils.enrichTokensToJSON(userTokens, assetGANModel, asset);
   res.send({prompt: body.prompt, classifiedAsset: asset, userTokens, jsonData});
 });
