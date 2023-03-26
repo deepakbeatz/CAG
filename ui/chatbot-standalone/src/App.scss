@@ -1,0 +1,29 @@
+.app {
+  padding: 20px;
+  .text-editor {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    textarea {
+      width: 100%;
+      min-height: 500px;
+      padding: 5px;
+      background: #f3f3f3;
+      border-radius: 4px;
+      resize: vertical;
+      white-space: pre;
+      word-wrap: normal;
+    }
+
+    button {
+      font-size: 1.2em;
+      color: #333;
+      border: 1px solid #333;
+      border-radius: 4px;
+      background: white;
+      padding: 0.5rem 0.7rem;
+      cursor: pointer;
+    }
+  }
+}
