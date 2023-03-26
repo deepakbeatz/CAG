@@ -44,9 +44,8 @@ class POEnricherModel {
             }
         }
         if (userJSON.name || userJSON.displayName) {
-            const poName = userJSON.name || userJSON.displayName
-            poJSON.processObject.name = poName;
-            poJSON.processObject.displayName = poName;
+            poJSON.processObject.name = userJSON.name || userJSON.displayName;
+            poJSON.processObject.displayName = userJSON.displayName || userJSON.name ;
         }
         if (!userJSON.name && !userJSON.displayName) {
             poJSON.processObject.name = "ProcessObject";
