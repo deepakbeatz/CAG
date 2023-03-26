@@ -37,7 +37,7 @@ class KeywordsMapperModel {
         value: -1
     };
     for (const [key, value] of this.dataMap.entries()) {
-        const similarity = stringSimilarity.compareTwoStrings(token, key);
+        const similarity = stringSimilarity.compareTwoStrings(token.toLowerCase(), key.toLowerCase());
         if (similarity > maxSimilarity.value) {
             maxSimilarity = {
                 word: key,

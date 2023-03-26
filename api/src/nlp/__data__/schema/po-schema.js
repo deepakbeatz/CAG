@@ -19,6 +19,10 @@ class POSchema {
     constructor() {
         this.userTokensMap = new Map();
     }
+
+    getSchemaMap() {
+        return keywordsSchemaMap;
+    }
     
     insertToken(token) {
         this.userTokensMap.set(token, true);

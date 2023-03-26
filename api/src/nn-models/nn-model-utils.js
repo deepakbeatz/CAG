@@ -1,4 +1,5 @@
 var { tokenize } = require("../nlp/nlp-utils");
+var stringSimilarity = require("string-similarity");
 
 const padSequence = (sequences, maxLength) => {
   return sequences.map((sequence) => {
@@ -13,7 +14,7 @@ const padSequence = (sequences, maxLength) => {
 };
 
 const textToSequence = (vocab) => {
-  const tokens = tokenize(vocab);
+  const tokens = vocab.split(/\r?\n/).join(',').split(",").map((token) => token.split("##")).flat();
   const sequenceMap = new Map();
   let newVal = 1;
   tokens.forEach((token) => {
@@ -24,7 +25,7 @@ const textToSequence = (vocab) => {
   });
   const sequences = vocab
     .split(/\r?\n/)
-    .map((sequenceVal) => tokenize(sequenceVal));
+    .map((sequenceVal) => sequenceVal.split(",").map((token) => token.split("##")).flat());
 
   const sequence = sequences.map((sequenceVal) =>
     sequenceVal.map((token) => sequenceMap.get(token) || 0)
@@ -47,19 +48,42 @@ const splitSequenceToTrainParams = (sequences) => {
   return [xTrain, yTrain];
 };
 
+const getTokenVector = (sequenceMap, token) => {
+  if (sequenceMap.has(token.toLowerCase())) {
+    return sequenceMap.get(token.toLowerCase());
+  }
+  let maxSimilarity = {
+    word: '',
+    value: -1
+  };
+  for (let [key, value] of sequenceMap.entries()) {
+    const similarity = stringSimilarity.compareTwoStrings(key.toLowerCase(), token.toLowerCase());
+    if (similarity > maxSimilarity.value) {
+        maxSimilarity = {
+            word: key.toLowerCase(),
+            value: similarity
+        }
+    }
+  }
+  if (maxSimilarity.value > 0.75) {
+    return sequenceMap.get(maxSimilarity.word);
+  }
+  return 0;
+}
+
 const getInputSequence = (input, sequenceMap, prev) => {
   let xPred = [];
-  const tokens = tokenize(input);
+  const tokens = input.split(",").map((token) => token.split("##")).flat();
   if (tokens.length === 1) {
-    xPred = [sequenceMap.get(tokens[0]), 0];
+    xPred = [getTokenVector(sequenceMap, tokens[0]), 0];
     if (prev) {
-      const prevTokens = tokenize(prev);
-      xPred = [sequenceMap.get(prevTokens[prevTokens.length - 1]), sequenceMap.get(tokens[0])];
+      const prevTokens = prev.split(",").map((token) => token.split("##")).flat();
+      xPred = [getTokenVector(sequenceMap, prevTokens[prevTokens.length - 1]), getTokenVector(sequenceMap, tokens[0])];
     }
   } else if (tokens.length > 1) {
     xPred = [
-      sequenceMap.get(tokens[tokens.length - 2]) || 0,
-      sequenceMap.get(tokens[tokens.length - 1]) || 0,
+      getTokenVector(sequenceMap, tokens[tokens.length - 2]) || 0,
+      getTokenVector(sequenceMap, tokens[tokens.length - 1]) || 0,
     ];
   }
   return [xPred];
@@ -90,7 +114,7 @@ const toWords = (inputSequence, sequenceMap) => {
   let words = '';
   inputSequence.forEach((sequence) => {
     if (sequence.length > 0) {
-      words = sequence.map((data) => getByValue(sequenceMap, data)).join(' ');
+      words = sequence.map((data) => getByValue(sequenceMap, data)).join(',');
     }
   });
   return words;

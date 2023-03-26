@@ -20,8 +20,8 @@ class AssetGANModel {
     vocabSequences;
     dataset;
     modelArtifacts;
-    MAX_LENGTH = 30;
-    EPOCHS = 100;
+    MAX_LENGTH = 60;
+    EPOCHS = 500;
     BATCH_SIZE = 10;
 
     constructor() {
@@ -43,6 +43,7 @@ class AssetGANModel {
         if (data) {
             this.corpus = data.toLowerCase();
             const { sequence, sequenceMap } = textToSequence(this.corpus);
+            console.log(sequenceMap);
             this.vocabSequences = sequence;
             this.vocabMap = sequenceMap;
         }
@@ -140,6 +141,7 @@ class AssetGANModel {
         const batchSize = trainConfig.batchSize || this.BATCH_SIZE;
         const mappedSequences = sequences.map((sequence) => {
             const [x, y] = splitSequenceToTrainParams([sequence]);
+            console.log(x, y);
             const xTrain = tf.tensor(x);
             const yTrain = tf.oneHot(tf.tensor1d(y, "int32"), this.vocabMap.size + 1);
             return { xTrain, yTrain };
@@ -241,6 +243,7 @@ class AssetGANModel {
     generateSequence(input, length = 3) {
         const inputData = input.toLowerCase();
         let inputSequence = getInputSequence(inputData, this.vocabMap);
+        console.log('inputSequence', inputSequence);
         let prev = inputData;
         let sequenceArr = [];
         while (length > 0 && inputSequence.length > 0) {

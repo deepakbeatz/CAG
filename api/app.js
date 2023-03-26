@@ -2,7 +2,8 @@
 var express = require("express"),
   bodyParser = require("body-parser"),
   cors = require("cors"),
-  nlpUtils = require("./src/nlp/nlp-utils");
+  nlpUtils = require("./src/nlp/nlp-utils"),
+  jsonUtils = require("./src/json/json-utils");
 
 var AssetClassifierModel = require("./src/nn-models/asset-classifier-model"),
   AssetGANModel = require("./src/nn-models/asset-gan-model");
@@ -25,8 +26,8 @@ assetClassifierModel.initModel(
 );
 const assetGANModel = new AssetGANModel();
 assetGANModel.initModel(
-  "generic-asset-model",
-  "./src/nn-models/__data__/corpus/generic-corpus.txt"
+  "po-model",
+  "./src/nn-models/__data__/corpus/po-corpus.txt"
 );
 
 // End Points
@@ -87,9 +88,8 @@ app.post("/api/model/assetgan/generate", async (req, res) => {
   const body = req.body;
   const asset = assetClassifierModel.classify(body.prompt);
   const userTokens = nlpUtils.getUserTokens(body.prompt, asset);
-  // const enrichedTokens = nlpUtils.enrichTokens(userTokens);
-  // const jsonData = jsonUtils.toJSON(enrichedTokens);
-  res.send({prompt: body.prompt, classifiedAsset: asset, userTokens});
+  const jsonData = nlpUtils.enrichTokensToJSON(userTokens, assetGANModel, asset);
+  res.send({prompt: body.prompt, classifiedAsset: asset, userTokens, jsonData});
 });
 
 // Server
