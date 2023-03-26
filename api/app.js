@@ -29,6 +29,7 @@ assetGANModel.initModel(
   "po-model",
   "./src/nn-models/__data__/corpus/po-corpus.txt"
 );
+const jsonMap = new Map();
 
 // End Points
 app.get("/api/test", async (req, res) => {
@@ -89,7 +90,26 @@ app.post("/api/model/assetgan/generate", async (req, res) => {
   const asset = assetClassifierModel.classify(body.prompt);
   const userTokens = nlpUtils.getUserTokens(body.prompt, asset);
   const jsonData = nlpUtils.enrichTokensToJSON(userTokens, assetGANModel, asset);
-  res.send({prompt: body.prompt, classifiedAsset: asset, userTokens, jsonData});
+  const id = Math.floor(Math.random() * 10000000000);
+  const jsonPayload = {
+    id: `${id}`,
+    jsonData
+  }
+  jsonMap.set(`${id}`, jsonData);
+  res.send({prompt: body.prompt, classifiedAsset: asset, userTokens, jsonPayload});
+});
+
+app.post("/api/json/data", async (req, res) => {
+  const body = req.body;
+  let jsonData = {};
+  if (jsonMap.has(body.id)) {
+    jsonData = jsonMap.get(body.id) || {};
+  }
+  const jsonPayload = {
+    id: body.id,
+    jsonData
+  }
+  res.send({jsonPayload});
 });
 
 // Server
