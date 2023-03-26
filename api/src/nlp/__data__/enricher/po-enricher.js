@@ -25,6 +25,7 @@ class POEnricherModel {
                 "tags": {},
             }
         };
+        const aiToggle = false;
         const userJSON = toJSON(tokens);
 
         //enrich description
@@ -33,7 +34,7 @@ class POEnricherModel {
         } else {
             poJSON.processObject.description = {};
         }
-        if (!poJSON.processObject.description.$t && userJSON.name) {
+        if (aiToggle && !poJSON.processObject.description.$t && userJSON.name) {
             const generatedTokens = this.model.generateSequence(`displayName##${userJSON.name}`, 10).split(",");
             const generatedDescription = generatedTokens.find((token) => token.include("description##"));
             if (generatedDescription) {
@@ -42,17 +43,18 @@ class POEnricherModel {
                 poJSON.processObject.description.$t = descriptionText;
             }
         }
-
+        if (userJSON.name || userJSON.displayName) {
+            const poName = userJSON.name || userJSON.displayName
+            poJSON.processObject.name = poName;
+            poJSON.processObject.displayName = poName;
+        }
         if (!userJSON.name && !userJSON.displayName) {
             poJSON.processObject.name = "ProcessObject";
             poJSON.processObject.displayName = "ProcessObject";
-        } else if (userJSON.displayName) {
-            poJSON.processObject.displayName = userJSON.displayName;
-            poJSON.processObject.name = userJSON.displayName;
         }
 
         // enrich fields - FIX Model
-        if (userJSON.detail.field) {
+        if (userJSON.detail && userJSON.detail.field) {
             userJSON.detail.field = Array.isArray(userJSON.detail.field) ? userJSON.detail.field : [userJSON.detail.field];
             poJSON.processObject.detail = {
                 field: userJSON.detail.field.map((field) => {
