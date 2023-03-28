@@ -16,7 +16,8 @@ const padSequence = (sequences, maxLength) => {
 const textToSequence = (vocab) => {
   const tokens = vocab.split(/\r?\n/).join(',').split(",").map((token) => token.split("##")).flat();
   const sequenceMap = new Map();
-  let newVal = 1;
+  sequenceMap.set('<any>', 1);
+  let newVal = 2;
   tokens.forEach((token) => {
     if (!sequenceMap.has(token)) {
       sequenceMap.set(token, newVal);
@@ -40,9 +41,14 @@ const splitSequenceToTrainParams = (sequences) => {
   const xTrain = [];
   const yTrain = [];
   sequences.forEach((sequence) => {
-    for (let i = 2; i < sequence.length; i++) {
-      xTrain.push([sequence[i - 2], sequence[i - 1]]);
-      yTrain.push(sequence[i]);
+    for (let i = 0; i < sequence.length - 1; i++) {
+      const seqClone = [...sequence];
+      const seqVal = seqClone.slice(0, i+1);
+      while(seqVal.length < 12) {
+        seqVal.unshift(0);
+      }
+      xTrain.push([seqVal[0], seqVal[1], seqVal[2], seqVal[3],seqVal[4], seqVal[5], seqVal[6], seqVal[7], seqVal[8], seqVal[9], seqVal[10]]);
+      yTrain.push(seqVal[11]); 
     }
   });
   return [xTrain, yTrain];
@@ -68,25 +74,18 @@ const getTokenVector = (sequenceMap, token) => {
   if (maxSimilarity.value > 0.75) {
     return sequenceMap.get(maxSimilarity.word);
   }
-  return 0;
+  return sequenceMap.get('<any>')
 }
 
-const getInputSequence = (input, sequenceMap, prev) => {
-  let xPred = [];
-  const tokens = input.split(",").map((token) => token.split("##")).flat();
-  if (tokens.length === 1) {
-    xPred = [getTokenVector(sequenceMap, tokens[0]), 0];
-    if (prev) {
-      const prevTokens = prev.split(",").map((token) => token.split("##")).flat();
-      xPred = [getTokenVector(sequenceMap, prevTokens[prevTokens.length - 1]), getTokenVector(sequenceMap, tokens[0])];
-    }
-  } else if (tokens.length > 1) {
-    xPred = [
-      getTokenVector(sequenceMap, tokens[tokens.length - 2]) || 0,
-      getTokenVector(sequenceMap, tokens[tokens.length - 1]) || 0,
-    ];
+const getInputSequence = (input, sequenceMap) => {
+  let tokens = input.split(",").map((token) => token.split("##")).flat().map((token) => getTokenVector(sequenceMap, token));
+  if (tokens.length > 11) {
+    tokens = tokens.splice(tokens.length - 11);
   }
-  return [xPred];
+  while(tokens.length < 11) {
+    tokens.unshift(0);
+  }
+  return [tokens];
 };
 
 function getByValue(map, searchValue) {
@@ -107,7 +106,7 @@ const getWordClass = (sequenceMap, yPredArr) => {
       maxDetails.index = index;
     }
   });
-  return getByValue(sequenceMap, maxDetails.index);
+  return {word: getByValue(sequenceMap, maxDetails.index), key: maxDetails.index};
 };
 
 const toWords = (inputSequence, sequenceMap) => {

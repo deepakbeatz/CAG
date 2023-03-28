@@ -20,8 +20,8 @@ class AssetGANModel {
     vocabSequences;
     dataset;
     modelArtifacts;
-    MAX_LENGTH = 60;
-    EPOCHS = 500;
+    MAX_LENGTH = 20;
+    EPOCHS = 250;
     BATCH_SIZE = 10;
 
     constructor() {
@@ -107,7 +107,7 @@ class AssetGANModel {
             tf.layers.embedding({
                 inputDim: this.vocabMap.size + 1,
                 outputDim: 10,
-                inputLength: 2,
+                inputLength: 11,
             })
         );
         generator.add(tf.layers.lstm({ units: 50 }));
@@ -141,7 +141,6 @@ class AssetGANModel {
         const batchSize = trainConfig.batchSize || this.BATCH_SIZE;
         const mappedSequences = sequences.map((sequence) => {
             const [x, y] = splitSequenceToTrainParams([sequence]);
-            console.log(x, y);
             const xTrain = tf.tensor(x);
             const yTrain = tf.oneHot(tf.tensor1d(y, "int32"), this.vocabMap.size + 1);
             return { xTrain, yTrain };
@@ -162,18 +161,18 @@ class AssetGANModel {
             await this.dataset.forEachAsync(async ({ xTrain, yTrain }) => {
                 // Train the generator
                 const xFake = tf.randomUniform(
-                    [batchSize, 2],
+                    [batchSize, 11],
                     1,
                     this.vocabMap.size,
                     "int32"
                 );
                 const yFake = this.generator.predict(xFake);
                 const xTrainReshaped = xTrain.reshape([
-                    xTrain.shape[0] * (this.MAX_LENGTH - 2 + 1),
-                    2,
+                    xTrain.shape[0] * (this.MAX_LENGTH),
+                    11,
                 ]);
                 const yTrainReshaped = yTrain.reshape([
-                    yTrain.shape[0] * (this.MAX_LENGTH - 2 + 1),
+                    yTrain.shape[0] * (this.MAX_LENGTH),
                     this.vocabMap.size + 1,
                 ]);
                 const genBatchLoss = await this.generator.trainOnBatch(
@@ -186,7 +185,7 @@ class AssetGANModel {
                 // Train the discriminator on real and fake data
                 const discRealLoss = await this.discriminator.trainOnBatch(
                     yTrainReshaped,
-                    tf.ones([yTrain.shape[0] * (this.MAX_LENGTH - 2 + 1), 1])
+                    tf.ones([yTrain.shape[0] * (this.MAX_LENGTH), 1])
                 );
                 const discFakeLoss = await this.discriminator.trainOnBatch(
                     yFake,
@@ -216,7 +215,7 @@ class AssetGANModel {
 
     generateRandomSequence(length = 3) {
         const xFake = tf.randomUniform(
-            [1, 2],
+            [1, 11],
             1,
             this.vocabMap.size,
             "int32"
@@ -243,18 +242,17 @@ class AssetGANModel {
     generateSequence(input, length = 3) {
         const inputData = input.toLowerCase();
         let inputSequence = getInputSequence(inputData, this.vocabMap);
-        console.log('inputSequence', inputSequence);
-        let prev = inputData;
         let sequenceArr = [];
         while (length > 0 && inputSequence.length > 0) {
             const xPred = tf.tensor(inputSequence);
             const yPred = this.generator.predict(xPred);
             const values = yPred.dataSync();
             const yPredArr = Array.from(values);
-            const word = getWordClass(this.vocabMap, yPredArr);
-            inputSequence = getInputSequence(word, this.vocabMap, prev);
+            const { word, key: prev } = getWordClass(this.vocabMap, yPredArr);
+            inputSequence = inputSequence[0].slice(1);
+            inputSequence.push(prev);
+            inputSequence = [inputSequence];
             sequenceArr.push(word);
-            prev = toWords(inputSequence, this.vocabMap);
             length -= 1;
         }
         return sequenceArr.join(' ');
