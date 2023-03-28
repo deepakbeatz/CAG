@@ -255,7 +255,7 @@ class AssetGANModel {
             sequenceArr.push(word);
             length -= 1;
         }
-        return sequenceArr.join(' ');
+        return sequenceArr;
     }
 }
 

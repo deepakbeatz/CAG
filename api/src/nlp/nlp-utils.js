@@ -58,7 +58,7 @@ const getUserTokens = (prompt, assetType) => {
 const enrichTokensToJSON = (tokens, assetGANModel, assetType) => {
   const schema = getSchema(assetType) || [];
   const enricher = getEnricher(assetType) || [];
-  enricher.initModel(schema.getSchemaMap(), assetGANModel);
+  enricher.initModel(assetGANModel, schema.getSchemaMap());
   return enricher.enrichTokensToJSON(tokens);
 }
 

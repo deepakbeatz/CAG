@@ -71,7 +71,8 @@ const getTokenVector = (sequenceMap, token) => {
         }
     }
   }
-  if (maxSimilarity.value > 0.75) {
+  if (maxSimilarity.value > 0.6) {
+    console.log('--dice-similarity-logs:token replaced->', maxSimilarity.word);
     return sequenceMap.get(maxSimilarity.word);
   }
   return sequenceMap.get('<any>')

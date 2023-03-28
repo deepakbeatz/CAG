@@ -2,7 +2,7 @@ displayName##user,isByCopy##<any>,name##user,description##It is a user object
 detail%%field%%label##User Name,detail%%field%%name##username,detail%%field%%nullable##false,detail%%field%%required##true,detail%%field%%type##string
 detail%%field%%label##Password,detail%%field%%name##password,detail%%field%%nullable##false,detail%%field%%required##true,detail%%field%%type##string
 displayName##Person,isByCopy##<any>,name##user,description##A simple person object
-detail%%field%%label##<any>,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##string
+detail%%field%%label##<any>,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##<any>
 detail%%field%%label##Name,detail%%field%%name##name,detail%%field%%nullable##true,detail%%field%%required##false,detail%%field%%type##string
 detail%%field%%label##Name,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##string
 detail%%field%%label##First Name,detail%%field%%name##firstName,detail%%field%%nullable##true,detail%%field%%required##false,detail%%field%%type##string
@@ -21,7 +21,7 @@ detail%%field%%label##Email,detail%%field%%name##email,detail%%field%%nullable##
 detail%%field%%label##Email,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##email
 detail%%field%%label##Phone,detail%%field%%name##phone,detail%%field%%nullable##true,detail%%field%%required##false,detail%%field%%type##phone
 detail%%field%%label##Phone,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##phone
-detail%%field%%label##Phone Number,detail%%field%%name##phoneNo,detail%%field%%nullable##true,detail%%field%%required##false,detail%%field%%type##phone
+detail%%field%%label##Phone Number,detail%%field%%name##Phone Number,detail%%field%%nullable##true,detail%%field%%required##false,detail%%field%%type##phone
 detail%%field%%label##Phone Number,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##phone
 detail%%field%%label##Feedback,detail%%field%%name##feedback,detail%%field%%nullable##true,detail%%field%%required##false,detail%%field%%type##textarea
 detail%%field%%label##Feedback,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##textarea
@@ -35,7 +35,7 @@ displayName##user,isByCopy##<any>,name##user,description##It is a user object
 detail%%field%%label##User Name,detail%%field%%name##username,detail%%field%%nullable##false,detail%%field%%required##true,detail%%field%%type##string
 detail%%field%%label##Password,detail%%field%%name##password,detail%%field%%nullable##false,detail%%field%%required##true,detail%%field%%type##string
 displayName##Person,isByCopy##<any>,name##user,description##A simple person object
-detail%%field%%label##<any>,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##string
+detail%%field%%label##<any>,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##<any>
 detail%%field%%label##Name,detail%%field%%name##name,detail%%field%%nullable##true,detail%%field%%required##false,detail%%field%%type##string
 detail%%field%%label##Name,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##string
 detail%%field%%label##First Name,detail%%field%%name##firstName,detail%%field%%nullable##true,detail%%field%%required##false,detail%%field%%type##string
@@ -78,3 +78,13 @@ displayName##<any>,isByCopy##<any>,name##user,description##A simple <any> object
 displayName##<any>,isByCopy##<any>,name##user,description##A simple <any> object
 displayName##user,isByCopy##<any>,name##user,description##It is a user object
 displayName##Person,isByCopy##<any>,name##user,description##A simple person object
+detail%%field%%label##PhoneNo,detail%%field%%name##phoneNo,detail%%field%%nullable##true,detail%%field%%required##false,detail%%field%%type##phone
+detail%%field%%label##PhoneNo,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##phone
+detail%%field%%label##Email Address,detail%%field%%name##emailAddress,detail%%field%%nullable##true,detail%%field%%required##false,detail%%field%%type##email
+detail%%field%%label##Email Address,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##email
+detail%%field%%label##Email Id,detail%%field%%name##emailId,detail%%field%%nullable##true,detail%%field%%required##false,detail%%field%%type##email
+detail%%field%%label##Email Id,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##email
+detail%%field%%label##PhoneNo,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##phone
+detail%%field%%label##Email Address,detail%%field%%name##emailAddress,detail%%field%%nullable##true,detail%%field%%required##false,detail%%field%%type##email
+detail%%field%%label##Email Id,detail%%field%%name##emailId,detail%%field%%nullable##true,detail%%field%%required##false,detail%%field%%type##email
+detail%%field%%label##Email Id,detail%%field%%name##<any>,detail%%field%%nullable##<any>,detail%%field%%required##<any>,detail%%field%%type##email
